@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Velox Stat Engine — Steal An Egg Speed Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #060913;
+      --bg-surface: rgba(15, 23, 42, 0.78);
+      --bg-panel: rgba(30, 41, 59, 0.55);
+      --border-subtle: rgba(148, 163, 184, 0.14);
+      --border-focus: #06b6d4;
+      --accent-primary: #06b6d4;
+      --accent-secondary: #6366f1;
+      --accent-emerald: #10b981;
+      --text-white: #f8fafc;
+      --text-slate: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(6, 182, 212, 0.15) 0px, transparent 45%),
+        radial-gradient(at 90% 85%, rgba(99, 102, 241, 0.15) 0px, transparent 45%);
+      color: var(--text-white);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 840px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Top Header Banner */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 18px 22px;
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 6px 18px rgba(6, 182, 212, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #ffffff, #bae6fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--text-slate);
+      font-weight: 500;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 6px 13px;
+      border-radius: 999px;
+      letter-spacing: 0.4px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--accent-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+
+    /* Main Split Grid Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 720px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .glass-panel {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 22px;
+      padding: 24px 20px;
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .section-tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 800;
+      color: var(--accent-primary);
+      margin-bottom: 4px;
+    }
+
+    .section-heading {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-white);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Form Controls */
+    .field-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-slate);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-input {
+      width: 100%;
+      background: var(--bg-panel);
+      color: var(--text-white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .control-input:hover {
+      border-color: rgba(148, 163, 184, 0.3);
+    }
+
+    .control-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+      background: rgba(30, 41, 59, 0.85);
+    }
+
+    select.control-input option {
+      background-color: #0f172a;
+      color: var(--text-white);
+    }
+
+    /* Quick Hour Chips */
+    .quick-chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      background: rgba(148, 163, 184, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-slate);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-primary);
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+
+    /* Action Buttons */
+    .action-group {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-run {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.92rem;
+      border: none;
+      border-radius: 13px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.4px;
+      box-shadow: 0 8px 22px -4px rgba(6, 182, 212, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-run:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px -4px rgba(6, 182, 212, 0.6);
+    }
+
+    .btn-run:active {
+      transform: translateY(0);
+    }
+
+    .status-bar {
+      font-size: 0.78rem;
+      color: var(--text-slate);
+      text-align: center;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px dashed var(--border-subtle);
+      transition: all 0.25s ease;
+    }
+
+    .status-bar.done {
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    /* Results Panel */
+    .hero-total {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.14) 0%, rgba(99, 102, 241, 0.14) 100%);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: 16px;
+      padding: 18px 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-total .hero-caption {
+      font-size: 0.73rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #38bdf8;
+      margin-bottom: 6px;
+    }
+
+    .hero-total .hero-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: -0.5px;
+    }
+
+    .hero-total .hero-sub {
+      font-size: 0.76rem;
+      color: var(--text-slate);
+      margin-top: 4px;
+    }
+
+    .stats-bento {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-tile {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 12px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-tile.span-full {
+      grid-column: span 2;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(99, 102, 241, 0.09);
+      border-color: rgba(99, 102, 241, 0.28);
+    }
+
+    .tile-name {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-slate);
+    }
+
+    .tile-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .stat-tile.span-full .tile-val {
+      font-size: 1.2rem;
+      color: #a5b4fc;
+    }
+
+    /* Modern Styled WhatsApp Button with Shimmer & Glow */
+    .btn-whatsapp-modern {
+      margin-top: 16px;
+      width: 100%;
+      position: relative;
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.92rem;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      padding: 14px 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px -4px rgba(37, 211, 102, 0.45);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Efek Kilau Berjalan (Shimmer) */
+    .btn-whatsapp-modern::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.28),
+        transparent
+      );
+      transform: skewX(-25deg);
+      animation: shimmerGlow 3.5s infinite ease-in-out;
+    }
+
+    @keyframes shimmerGlow {
+      0% { left: -100%; }
+      30%, 100% { left: 160%; }
+    }
+
+    .btn-whatsapp-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -4px rgba(37, 211, 102, 0.65);
+      filter: brightness(1.05);
+    }
+
+    .btn-whatsapp-modern:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 18px -4px rgba(37, 211, 102, 0.4);
+    }
+
+    .wa-badge-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-reset {
+      margin-top: 8px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-slate);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .btn-reset:hover {
+      color: var(--text-white);
+      border-color: rgba(148, 163, 184, 0.4);
+      background: rgba(255, 255, 255, 0.03);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <!-- Top Header -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h1>VELOX STAT ENGINE</h1>
+          <p>Simulasi & Estimasi AFK Speed — Steal An Egg</p>
+        </div>
+      </div>
+      <div class="badge-live">
+        <span class="badge-dot"></span>
+        PRECISION READY
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="main-grid">
+      <!-- Left Column: Configuration -->
+      <section class="glass-panel">
+        <div>
+          <div class="section-tag">Konfigurasi Setup</div>
+          <div class="section-heading">Parameter Karakter</div>
+
+          <div class="field-list">
+            <div class="field-box">
+              <label class="field-label" for="treadmill">🏃 Zona Treadmill</label>
+              <select id="treadmill" class="control-input">
+                <option value="2" selected>Treadmill — +2</option>
+                <option value="5">Sci-Fi Treadmill — +5</option>
+                <option value="12">Flame Treadmill — +12</option>
+                <option value="30">Celebrity Treadmill — +30</option>
+                <option value="80">Golden Treadmill — +80</option>
+                <option value="100">Mythic Treadmill — +100</option>
+                <option value="200">Lucky Block Treadmill — +200</option>
+                <option value="500">Hacker Treadmill — +500</option>
+                <option value="1000">Demonic Treadmill — +1K</option>
+                <option value="2000">Angelic Treadmill — +2K</option>
+                <option value="3000">Astral Treadmill — +3K</option>
+                <option value="8500">Enchanted Forest — +8.500K / langkah</option>
+              </select>
+            </div>
+
+            <div class="input-row">
+              <div class="field-box">
+                <label class="field-label" for="trail">✨ Efek Trail</label>
+                <select id="trail" class="control-input">
+                  <option value="1.5" selected>Abu-abu — x1.5</option>
+                  <option value="2">Hijau — x2</option>
+                  <option value="2.5">Biru — x2.5</option>
+                  <option value="3">Ungu — x3</option>
+                  <option value="3.5">Emas — x3.5</option>
+                  <option value="4">Merah — x4</option>
+                  <option value="5">Galaksi — x5</option>
+                  <option value="7">Rahasia — x7</option>
+                  <option value="10">Abadi — x10</option>
+                  <option value="14">Ilahi — x14</option>
+                  <option value="20">Bunga Bulan — x20</option>
+                </select>
+              </div>
+
+              <div class="field-box">
+                <label class="field-label" for="multiplier">🚀 Boost Multiplier</label>
+                <select id="multiplier" class="control-input">
+                  <option value="1" selected>x1</option>
+                  <option value="2">x2</option>
+                  <option value="4">x4</option>
+                  <option value="8">x8</option>
+                  <option value="16">x16</option>
+                  <option value="32">x32</option>
+                  <option value="64">x64</option>
+                  <option value="128">x128</option>
+                  <option value="256">x256</option>
+                  <option value="512">x512</option>
+                  <option value="1024">x1K</option>
+                  <option value="2048">x2K</option>
+                  <option value="3072">x3K</option>
+                  <option value="4096">x4K</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-box">
+              <label class="field-label" for="currentSpeed">⚡ Speed Dimiliki Sekarang</label>
+              <input type="text" id="currentSpeed" class="control-input" placeholder="Contoh: 0, 500M, 3.9B" value="0" />
+            </div>
+
+            <div class="field-box">
+              <label class="field-label" for="afkHours">⏱️ Durasi Target AFK (Jam)</label>
+              <input type="number" id="afkHours" class="control-input" placeholder="Masukkan jam" value="1" min="0" step="any" />
+              <div class="quick-chips">
+                <button type="button" class="chip-btn" onclick="setHours(1)">1 Jam</button>
+                <button type="button" class="chip-btn" onclick="setHours(6)">6 Jam</button>
+                <button type="button" class="chip-btn" onclick="setHours(12)">12 Jam</button>
+                <button type="button" class="chip-btn" onclick="setHours(24)">24 Jam</button>
+                <button type="button" class="chip-btn" onclick="setHours(48)">48 Jam</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-group">
+          <button type="button" class="btn-run" onclick="calculateSpeed()">
+            <span>HITUNG SEKARANG</span>
+            <span>→</span>
+          </button>
+          <div class="status-bar" id="statusMessage">
+            Masukkan data lalu hitung.
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Analytics Output -->
+      <section class="glass-panel" id="resultPanel">
+        <div>
+          <div class="section-tag">Laporan Proyeksi</div>
+          <div class="section-heading">Hasil Perhitungan</div>
+
+          <!-- Highlight Total -->
+          <div class="hero-total">
+            <div class="hero-caption">Total Hasil AFK</div>
+            <div class="hero-number" id="resFinalTotal">0</div>
+            <div class="hero-sub">Akumulasi Speed Sekarang + Yang Didapat Saat AFK</div>
+          </div>
+
+          <!-- Bento Grid Metrics -->
+          <div class="stats-bento">
+            <div class="stat-tile span-full">
+              <span class="tile-name">✨ Yang Didapat Saat AFK</span>
+              <span class="tile-val" id="resGainTotalAFK">0</span>
+            </div>
+
+            <div class="stat-tile">
+              <span class="tile-name">Speed Sekarang</span>
+              <span class="tile-val" id="resCurrentSpeed">0</span>
+            </div>
+
+            <div class="stat-tile">
+              <span class="tile-name">Gain / Step</span>
+              <span class="tile-val" id="resGainStep">0</span>
+            </div>
+
+            <div class="stat-tile">
+              <span class="tile-name">Gain / Detik</span>
+              <span class="tile-val" id="resGainSec">0</span>
+            </div>
+
+            <div class="stat-tile">
+              <span class="tile-name">Gain / Menit</span>
+              <span class="tile-val" id="resGainMin">0</span>
+            </div>
+
+            <div class="stat-tile span-full">
+              <span class="tile-name">🔥 Gain / Jam</span>
+              <span class="tile-val" id="resGainHour">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Tombol WhatsApp dengan Desain Lebih Cantik & Glow -->
+          <a href="https://wa.me/6289639947788" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-modern">
+            <div class="wa-badge-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.06-2.127-.532-1.745-.72-2.884-2.511-2.973-2.628-.088-.117-.714-.949-.714-1.81 0-.86.449-1.285.609-1.458.159-.174.347-.217.463-.217.116 0 .232.001.333.006.107.005.25-.041.391.298.144.348.491 1.199.534 1.287.043.088.072.19.014.305-.058.117-.087.19-.174.291-.087.102-.183.228-.261.306-.087.087-.179.182-.077.357.101.174.45 1.742 1.492 2.667.575.511 1.059.67 1.21.733.15.062.239.053.327-.048.089-.102.377-.439.479-.59.102-.15.203-.125.342-.074.139.051.884.417 1.036.493.152.077.253.114.29.177.037.063.037.369-.107.774z"/>
+              </svg>
+            </div>
+            <span>Hubungi via WhatsApp untuk Joki</span>
+          </a>
+
+          <button type="button" class="btn-reset" onclick="resetForm()">
+            ↻ Reset ke Nilai Awal
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function setHours(val) {
+      document.getElementById("afkHours").value = val;
+    }
+
+    function parseSpeedValue(raw) {
+      if (!raw) return 0;
+      let str = String(raw).trim().toUpperCase().replace(/\s+/g, "");
+      const suffixes = { K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
+      let multiplier = 1;
+
+      const lastChar = str.slice(-1);
+      if (suffixes[lastChar]) {
+        multiplier = suffixes[lastChar];
+        str = str.slice(0, -1);
+      }
+
+      str = str.replace(/,/g, ".");
+      const num = parseFloat(str);
+      return isNaN(num) ? 0 : num * multiplier;
+    }
+
+    function formatAbbreviated(value) {
+      if (!isFinite(value) || value <= 0) return "0";
+      const abs = Math.abs(value);
+
+      const formatUnit = (num, suffix) => {
+        let digits = 2;
+        if (num >= 100) digits = 0;
+        else if (num >= 10) digits = 1;
+        return num.toFixed(digits).replace(/\.00$/, "") + suffix;
+      };
+
+      if (abs >= 1e12) return formatUnit(value / 1e12, "T");
+      if (abs >= 1e9)  return formatUnit(value / 1e9, "B");
+      if (abs >= 1e6)  return formatUnit(value / 1e6, "M");
+      if (abs >= 1e3)  return formatUnit(value / 1e3, "K");
+      return Math.round(value).toString();
+    }
+
+    function calculateSpeed() {
+      const treadmill = parseFloat(document.getElementById("treadmill").value) || 0;
+      const trail = parseFloat(document.getElementById("trail").value) || 0;
+      const multiplier = parseFloat(document.getElementById("multiplier").value) || 0;
+      const currentSpeed = parseSpeedValue(document.getElementById("currentSpeed").value);
+      const afkHours = Math.max(0, parseFloat(document.getElementById("afkHours").value) || 0);
+
+      // Rumus kalkulasi
+      const gainPerStep = treadmill * (trail + multiplier - 1);
+      const stepsPerSecond = 22;
+      const gainPerSecond = gainPerStep * stepsPerSecond;
+      const gainPerMinute = gainPerSecond * 60;
+      const gainPerHour = gainPerMinute * 60;
+      const gainedDuringAfk = gainPerHour * afkHours;
+      const totalAfterAfk = currentSpeed + gainedDuringAfk;
+
+      document.getElementById("resCurrentSpeed").textContent = formatAbbreviated(currentSpeed);
+      document.getElementById("resGainStep").textContent = formatAbbreviated(gainPerStep);
+      document.getElementById("resGainSec").textContent = formatAbbreviated(gainPerSecond);
+      document.getElementById("resGainMin").textContent = formatAbbreviated(gainPerMinute);
+      document.getElementById("resGainHour").textContent = formatAbbreviated(gainPerHour);
+      document.getElementById("resGainTotalAFK").textContent = formatAbbreviated(gainedDuringAfk);
+      document.getElementById("resFinalTotal").textContent = formatAbbreviated(totalAfterAfk);
+
+      const statusEl = document.getElementById("statusMessage");
+      statusEl.textContent = "✅ Perhitungan selesai. Hasil kalkulator sudah ditampilkan.";
+      statusEl.classList.add("done");
+    }
+
+    function resetForm() {
+      document.getElementById("treadmill").value = "2";
+      document.getElementById("trail").value = "1.5";
+      document.getElementById("multiplier").value = "1";
+      document.getElementById("currentSpeed").value = "0";
+      document.getElementById("afkHours").value = "1";
+
+      document.getElementById("resCurrentSpeed").textContent = "0";
+      document.getElementById("resGainStep").textContent = "0";
+      document.getElementById("resGainSec").textContent = "0";
+      document.getElementById("resGainMin").textContent = "0";
+      document.getElementById("resGainHour").textContent = "0";
+      document.getElementById("resGainTotalAFK").textContent = "0";
+      document.getElementById("resFinalTotal").textContent = "0";
+
+      const statusEl = document.getElementById("statusMessage");
+      statusEl.textContent = "Masukkan data lalu hitung.";
+      statusEl.classList.remove("done");
+    }
+  </script>
+</body>
+</html>
